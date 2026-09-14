@@ -4,7 +4,8 @@ import { ObjectId } from 'mongodb';
 
 process.env.APP_JWT_SECRET = 'test-secret-that-is-long-enough-to-sign-session-tokens';
 
-const { assertAdmin, normalizeEmail, publicUser, signSession } = await import('../api/_lib/auth.js');
+const { assertAdmin, normalizeEmail, publicUser, setSessionCookie, signSession } = await import('../api/_lib/auth.js');
+const { allowMethod } = await import('../api/_lib/http.js');
 const { cleanSubmission, gradeView, maxUploadBytes, submissionReceipt, validateUpload } = await import('../api/_lib/submissions.js');
 const { cleanGrade, cleanProgress, isLearningComplete } = await import('../api/_lib/progress.js');
 
@@ -65,4 +66,19 @@ test('administrator authorization rejects every non-admin role', () => {
   assert.throws(() => assertAdmin({ role: 'student' }), error => error.status === 403);
   assert.throws(() => assertAdmin({ role: 'teacher' }), error => error.status === 403);
   assert.equal(assertAdmin({ role: 'admin', id: 'admin' }).id, 'admin');
+});
+
+test('production frontend receives credentialed CORS and cross-site session cookies', () => {
+  const headers = {};
+  const response = {
+    setHeader(name, value) { headers[name] = value; },
+    status() { return this; },
+    json() {},
+    end() {},
+  };
+  assert.equal(allowMethod({ method: 'GET', headers: { origin: 'https://platform-new-ecru.vercel.app' } }, response, ['GET']), true);
+  assert.equal(headers['Access-Control-Allow-Origin'], 'https://platform-new-ecru.vercel.app');
+  assert.equal(headers['Access-Control-Allow-Credentials'], 'true');
+  setSessionCookie(response, 'token');
+  assert.match(headers['Set-Cookie'], /HttpOnly; Secure; SameSite=None/);
 });

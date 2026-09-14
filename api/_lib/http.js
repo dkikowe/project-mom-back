@@ -1,9 +1,14 @@
 const MAX_JSON_BYTES = 1_000_000;
+const PRODUCTION_FRONTEND_ORIGIN = 'https://platform-new-ecru.vercel.app';
+
+function allowedOrigins() {
+  const configured = String(process.env.FRONTEND_ORIGIN || '').split(',').map(value => value.trim().replace(/\/$/, '')).filter(Boolean);
+  return new Set([PRODUCTION_FRONTEND_ORIGIN, ...configured]);
+}
 
 function setCors(req, res) {
-  const origin = req.headers.origin;
-  const allowedOrigin = process.env.FRONTEND_ORIGIN;
-  if (!origin || !allowedOrigin || origin !== allowedOrigin) return;
+  const origin = String(req.headers.origin || '').replace(/\/$/, '');
+  if (!origin || !allowedOrigins().has(origin)) return;
   res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');

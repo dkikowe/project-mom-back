@@ -75,13 +75,11 @@ export function cookies(req) {
 }
 
 export function setSessionCookie(res, token) {
-  const sameSite = process.env.FRONTEND_ORIGIN ? 'None' : 'Lax';
-  res.setHeader('Set-Cookie', `${COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; Secure; SameSite=${sameSite}; Max-Age=604800`);
+  res.setHeader('Set-Cookie', `${COOKIE}=${encodeURIComponent(token)}; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=604800`);
 }
 
 export function clearSessionCookie(res) {
-  const sameSite = process.env.FRONTEND_ORIGIN ? 'None' : 'Lax';
-  res.setHeader('Set-Cookie', `${COOKIE}=; Path=/; HttpOnly; Secure; SameSite=${sameSite}; Max-Age=0`);
+  res.setHeader('Set-Cookie', `${COOKIE}=; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=0`);
 }
 
 export async function currentUser(req) {

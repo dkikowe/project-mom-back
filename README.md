@@ -25,6 +25,10 @@ After Railway assigns a public domain, place that address in the frontend's
 `dist/config.js` as `window.APP_API_BASE`. Set `FRONTEND_ORIGIN` here to the
 frontend's exact public origin, without a trailing slash.
 
+The production frontend `https://platform-new-ecru.vercel.app` is also included
+in the backend allowlist. `FRONTEND_ORIGIN` may contain additional comma-separated
+origins for previews or a future custom domain.
+
 ## Checks
 
 ```bash
