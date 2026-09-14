@@ -1,8 +1,8 @@
-import { allowMethod, handleError, json } from '../../../_lib/http.js';
-import { requireUser } from '../../../_lib/auth.js';
-import { getDb } from '../../../_lib/db.js';
-import { downloadAttachment } from '../../../_lib/storage.js';
-import { parseObjectId } from '../../../_lib/submissions.js';
+import { allowMethod, handleError, json } from '../../_lib/http.js';
+import { requireUser } from '../../_lib/auth.js';
+import { getDb } from '../../_lib/db.js';
+import { downloadAttachment } from '../../_lib/storage.js';
+import { parseObjectId } from '../../_lib/submissions.js';
 
 function safeFilename(value) {
   return String(value || 'attachment').replace(/["\\\r\n]/g, '_');

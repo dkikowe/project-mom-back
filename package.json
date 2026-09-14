@@ -4,10 +4,13 @@
   "private": true,
   "description": "MYP learning platform for Ұшқан ұя",
   "type": "module",
+  "main": "server.js",
+  "packageManager": "npm@10.9.0",
   "engines": {
     "node": ">=20"
   },
   "scripts": {
+    "start": "node server.js",
     "build": "npm run check",
     "test": "node --test test/*.test.mjs",
     "check": "node scripts/check-syntax.cjs"
@@ -16,6 +19,7 @@
     "@aws-sdk/client-s3": "^3.1132.0",
     "bcryptjs": "^2.4.3",
     "busboy": "^1.6.0",
+    "express": "^5.2.1",
     "jose": "^5.9.6",
     "mongodb": "^6.19.0"
   }

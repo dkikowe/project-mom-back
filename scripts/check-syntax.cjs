@@ -9,7 +9,7 @@ function filesIn(directory) {
   });
 }
 
-for (const file of filesIn('api')) {
+for (const file of [...filesIn('api'), 'server.js']) {
   execFileSync(process.execPath, ['--check', file], { stdio: 'inherit' });
 }
 
