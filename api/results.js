@@ -2,7 +2,7 @@ import { allowMethod, handleError, json } from './_lib/http.js';
 import { requireUser } from './_lib/auth.js';
 import { getDb } from './_lib/db.js';
 import { isLearningComplete, progressView } from './_lib/progress.js';
-import { submissionView } from './_lib/submissions.js';
+import { gradeView } from './_lib/submissions.js';
 
 export default async function handler(req, res) {
   if (!allowMethod(req, res, ['GET'])) return;
@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     return json(res, 200, {
       progress: safeProgress,
       learningComplete: isLearningComplete(safeProgress),
-      grade: gradedSubmission ? submissionView(gradedSubmission) : null,
+      grade: gradeView(gradedSubmission),
     });
   } catch (error) {
     return handleError(res, error);

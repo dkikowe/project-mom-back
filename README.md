@@ -36,6 +36,8 @@ npm test
 ## Main routes
 
 - `/api/auth/*` — registration, login, logout, session.
-- `/api/submissions` — protected student submissions and attachments.
+- `POST /api/submissions` — students can submit work, but receive only a submission receipt.
+- `/api/admin/submissions*` — only administrators can read work text, grade it and access attachments.
+- `/api/submissions/:id` and `/api/submissions/:id/download` — administrator-only read/download routes.
 - `/api/progress`, `/api/results` — individual progress and results.
 - `/api/admin/*` — administrator grading, class progress, research CSV source.

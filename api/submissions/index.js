@@ -2,20 +2,15 @@ import { allowMethod, handleError, json, readJson } from '../_lib/http.js';
 import { requireUser } from '../_lib/auth.js';
 import { getDb } from '../_lib/db.js';
 import { deleteAttachment, uploadAttachment } from '../_lib/storage.js';
-import { cleanSubmission, parseMultipart, submissionView, validateUpload } from '../_lib/submissions.js';
+import { cleanSubmission, parseMultipart, submissionReceipt, validateUpload } from '../_lib/submissions.js';
 
 export const config = { api: { bodyParser: false } };
 
 export default async function handler(req, res) {
-  if (!allowMethod(req, res, ['GET', 'POST'])) return;
+  if (!allowMethod(req, res, ['POST'])) return;
   try {
     const user = await requireUser(req);
     const submissions = (await getDb()).collection('submissions');
-
-    if (req.method === 'GET') {
-      const records = await submissions.find({ studentId: user._id }).sort({ createdAt: -1 }).limit(50).toArray();
-      return json(res, 200, { submissions: records.map(submissionView) });
-    }
 
     const contentType = req.headers['content-type'] || '';
     let raw;
@@ -43,7 +38,7 @@ export default async function handler(req, res) {
       };
       const result = await submissions.insertOne(submission);
       submission._id = result.insertedId;
-      return json(res, 201, { submission: submissionView(submission) });
+      return json(res, 201, { submission: submissionReceipt(submission) });
     } catch (error) {
       if (attachment) await deleteAttachment(attachment.storageKey).catch(() => {});
       throw error;

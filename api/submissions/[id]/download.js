@@ -1,5 +1,5 @@
 import { allowMethod, handleError, json } from '../../_lib/http.js';
-import { requireUser } from '../../_lib/auth.js';
+import { requireAdmin } from '../../_lib/auth.js';
 import { getDb } from '../../_lib/db.js';
 import { downloadAttachment } from '../../_lib/storage.js';
 import { parseObjectId } from '../../_lib/submissions.js';
@@ -11,10 +11,9 @@ function safeFilename(value) {
 export default async function handler(req, res) {
   if (!allowMethod(req, res, ['GET'])) return;
   try {
-    const user = await requireUser(req);
+    await requireAdmin(req);
     const submission = await (await getDb()).collection('submissions').findOne({ _id: parseObjectId(req.query.id) });
     if (!submission?.attachment) return json(res, 404, { error: 'Тіркелген файл жоқ.' });
-    if (user.role !== 'admin' && !submission.studentId.equals(user._id)) return json(res, 403, { error: 'Бұл файлға қолжетімділік жоқ.' });
 
     res.setHeader('Content-Type', submission.attachment.mimeType);
     res.setHeader('Content-Length', submission.attachment.size);

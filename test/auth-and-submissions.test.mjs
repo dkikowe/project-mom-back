@@ -4,8 +4,8 @@ import { ObjectId } from 'mongodb';
 
 process.env.APP_JWT_SECRET = 'test-secret-that-is-long-enough-to-sign-session-tokens';
 
-const { normalizeEmail, publicUser, signSession } = await import('../api/_lib/auth.js');
-const { cleanSubmission, maxUploadBytes, validateUpload } = await import('../api/_lib/submissions.js');
+const { assertAdmin, normalizeEmail, publicUser, signSession } = await import('../api/_lib/auth.js');
+const { cleanSubmission, gradeView, maxUploadBytes, submissionReceipt, validateUpload } = await import('../api/_lib/submissions.js');
 const { cleanGrade, cleanProgress, isLearningComplete } = await import('../api/_lib/progress.js');
 
 test('normalizes email before account lookup', () => {
@@ -45,4 +45,24 @@ test('accepts MYP criterion grades and teacher feedback in their allowed ranges'
   const grade = cleanGrade({ scoreA: '7', scoreD: 6, feedback: 'Дәйексөзді әсерімен байланыстыруың сәтті шықты.' });
   assert.deepEqual(grade, { scoreA: 7, scoreD: 6, feedback: 'Дәйексөзді әсерімен байланыстыруың сәтті шықты.', total: 13, status: 'graded' });
   assert.throws(() => cleanGrade({ scoreA: 9, scoreD: 0, feedback: 'Жарамсыз ұпай.' }), /ұпайы/);
+});
+
+test('student-facing submission responses never expose work text or attachment metadata', () => {
+  const submission = {
+    _id: new ObjectId(),
+    title: 'Үзінді талдауы',
+    analysis: 'Оқушының толық жұмысы',
+    attachment: { storageKey: 'private/key.docx', filename: 'work.docx' },
+    grading: { status: 'graded', scoreA: 7, scoreD: 6, total: 13, feedback: 'Жақсы талдау.', gradedAt: new Date() },
+    createdAt: new Date(),
+  };
+  assert.deepEqual(Object.keys(submissionReceipt(submission)).sort(), ['createdAt', 'id', 'status', 'title']);
+  assert.equal(JSON.stringify(gradeView(submission)).includes('analysis'), false);
+  assert.equal(JSON.stringify(gradeView(submission)).includes('storageKey'), false);
+});
+
+test('administrator authorization rejects every non-admin role', () => {
+  assert.throws(() => assertAdmin({ role: 'student' }), error => error.status === 403);
+  assert.throws(() => assertAdmin({ role: 'teacher' }), error => error.status === 403);
+  assert.equal(assertAdmin({ role: 'admin', id: 'admin' }).id, 'admin');
 });

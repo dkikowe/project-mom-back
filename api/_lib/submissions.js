@@ -88,6 +88,29 @@ export function submissionView(submission) {
   };
 }
 
+export function submissionReceipt(submission) {
+  return {
+    id: submission._id.toString(),
+    title: submission.title,
+    status: 'submitted',
+    createdAt: submission.createdAt,
+  };
+}
+
+export function gradeView(submission) {
+  if (!submission?.grading) return null;
+  return {
+    grading: {
+      status: submission.grading.status,
+      scoreA: submission.grading.scoreA,
+      scoreD: submission.grading.scoreD,
+      total: submission.grading.total,
+      feedback: submission.grading.feedback,
+      gradedAt: submission.grading.gradedAt,
+    },
+  };
+}
+
 export function parseObjectId(value) {
   if (!ObjectId.isValid(value)) throw clientError('Жұмыс идентификаторы жарамсыз.');
   return new ObjectId(value);

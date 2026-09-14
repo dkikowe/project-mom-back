@@ -104,10 +104,13 @@ export async function requireUser(req) {
   throw error;
 }
 
-export async function requireAdmin(req) {
-  const user = await requireUser(req);
+export function assertAdmin(user) {
   if (user.role === 'admin') return user;
   const error = new Error('Бұл бөлім тек әкімшіге арналған.');
   error.status = 403;
   throw error;
+}
+
+export async function requireAdmin(req) {
+  return assertAdmin(await requireUser(req));
 }
