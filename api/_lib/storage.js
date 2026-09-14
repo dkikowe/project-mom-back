@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand, GetObjectCommand, HeadBucketCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
 let client;
 
@@ -50,4 +50,10 @@ export async function deleteAttachment(key) {
   if (!key) return;
   const { bucket } = settings();
   await s3().send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
+}
+
+export async function checkStorage() {
+  const { bucket } = settings();
+  await s3().send(new HeadBucketCommand({ Bucket: bucket }));
+  return true;
 }

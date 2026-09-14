@@ -15,7 +15,10 @@ export async function getDb() {
   requireUri();
   if (!clientPromise) {
     const client = new MongoClient(uri, { maxPoolSize: 10, serverSelectionTimeoutMS: 7000 });
-    clientPromise = client.connect();
+    clientPromise = client.connect().catch(error => {
+      clientPromise = undefined;
+      throw error;
+    });
   }
   const client = await clientPromise;
   return client.db();
