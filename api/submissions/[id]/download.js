@@ -1,6 +1,7 @@
 import { allowMethod, handleError, json } from '../../../_lib/http.js';
 import { requireUser } from '../../../_lib/auth.js';
-import { getDb, getFilesBucket } from '../../../_lib/db.js';
+import { getDb } from '../../../_lib/db.js';
+import { downloadAttachment } from '../../../_lib/storage.js';
 import { parseObjectId } from '../../../_lib/submissions.js';
 
 function safeFilename(value) {
@@ -18,7 +19,7 @@ export default async function handler(req, res) {
     res.setHeader('Content-Type', submission.attachment.mimeType);
     res.setHeader('Content-Length', submission.attachment.size);
     res.setHeader('Content-Disposition', `attachment; filename="${safeFilename(submission.attachment.filename)}"`);
-    return (await getFilesBucket()).openDownloadStream(submission.attachment.fileId).pipe(res);
+    return (await downloadAttachment(submission.attachment.storageKey)).pipe(res);
   } catch (error) {
     return handleError(res, error);
   }

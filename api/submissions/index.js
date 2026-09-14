@@ -1,23 +1,10 @@
-import { Readable } from 'node:stream';
 import { allowMethod, handleError, json, readJson } from '../_lib/http.js';
 import { requireUser } from '../_lib/auth.js';
-import { getDb, getFilesBucket } from '../_lib/db.js';
+import { getDb } from '../_lib/db.js';
+import { deleteAttachment, uploadAttachment } from '../_lib/storage.js';
 import { cleanSubmission, parseMultipart, submissionView, validateUpload } from '../_lib/submissions.js';
 
 export const config = { api: { bodyParser: false } };
-
-async function saveAttachment(upload, ownerId) {
-  if (!upload) return null;
-  const bucket = await getFilesBucket();
-  const stream = bucket.openUploadStream(upload.filename, {
-    contentType: upload.mimeType,
-    metadata: { ownerId: ownerId.toString(), uploadedAt: new Date() },
-  });
-  await new Promise((resolve, reject) => {
-    Readable.from(upload.data).pipe(stream).on('finish', resolve).on('error', reject);
-  });
-  return { fileId: stream.id, filename: upload.filename, mimeType: upload.mimeType, size: upload.size };
-}
 
 export default async function handler(req, res) {
   if (!allowMethod(req, res, ['GET', 'POST'])) return;
@@ -42,7 +29,7 @@ export default async function handler(req, res) {
     }
 
     const work = cleanSubmission(raw);
-    const attachment = await saveAttachment(upload, user._id);
+    const attachment = await uploadAttachment(upload, user._id.toString());
     const now = new Date();
     try {
       const submission = {
@@ -58,7 +45,7 @@ export default async function handler(req, res) {
       submission._id = result.insertedId;
       return json(res, 201, { submission: submissionView(submission) });
     } catch (error) {
-      if (attachment) await (await getFilesBucket()).delete(attachment.fileId).catch(() => {});
+      if (attachment) await deleteAttachment(attachment.storageKey).catch(() => {});
       throw error;
     }
   } catch (error) {

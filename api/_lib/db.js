@@ -1,4 +1,4 @@
-import { GridFSBucket, MongoClient } from 'mongodb';
+import { MongoClient } from 'mongodb';
 
 const uri = process.env.MONGODB_URI;
 let clientPromise;
@@ -19,10 +19,6 @@ export async function getDb() {
   }
   const client = await clientPromise;
   return client.db();
-}
-
-export async function getFilesBucket() {
-  return new GridFSBucket(await getDb(), { bucketName: 'submission_files' });
 }
 
 export async function ensureIndexes() {
