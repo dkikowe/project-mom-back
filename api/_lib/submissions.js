@@ -12,7 +12,7 @@ export function cleanSubmission(input) {
   const title = String(input.title || '').trim().replace(/\s+/g, ' ');
   const analysis = String(input.analysis || '').trim();
   const additionalSources = String(input.additionalSources || '').trim();
-  const integrityConfirmed = input.integrityConfirmed === true || input.integrityConfirmed === 'true';
+  const integrityConfirmed = input.integrityConfirmed === true || input.integrityConfirmed === 'true' || input.integrityConfirmed === 'on';
 
   if (title.length < 2 || title.length > 140) throw clientError('Жұмыс атауы 2–140 таңба болуы керек.');
   if (analysis.length < 80 || analysis.length > 50_000) throw clientError('Талдау 80–50 000 таңба болуы керек.');

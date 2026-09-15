@@ -1,6 +1,7 @@
 import express from 'express';
 import health from './api/health.js';
 import adminResults from './api/admin/results.js';
+import adminResult from './api/admin/results/[id].js';
 import adminSubmissions from './api/admin/submissions.js';
 import adminSubmission from './api/admin/submissions/[id].js';
 import adminUsers from './api/admin/users.js';
@@ -38,6 +39,7 @@ app.all('/api/submissions', submissions);
 app.all('/api/submissions/:id/download', withId(download));
 app.all('/api/submissions/:id', withId(submission));
 app.all('/api/admin/results', adminResults);
+app.all('/api/admin/results/:id', withId(adminResult));
 app.all('/api/admin/submissions', adminSubmissions);
 app.all('/api/admin/submissions/:id', withId(adminSubmission));
 app.all('/api/admin/users', adminUsers);

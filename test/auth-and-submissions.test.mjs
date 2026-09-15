@@ -8,6 +8,7 @@ const { assertAdmin, normalizeEmail, publicUser, sessionToken, setSessionCookie,
 const { allowMethod } = await import('../api/_lib/http.js');
 const { cleanSubmission, gradeView, maxUploadBytes, submissionReceipt, validateUpload } = await import('../api/_lib/submissions.js');
 const { cleanGrade, cleanProgress, isLearningComplete } = await import('../api/_lib/progress.js');
+const { buildAdminResults } = await import('../api/_lib/admin-results.js');
 
 test('normalizes email before account lookup', () => {
   assert.equal(normalizeEmail('  STUDENT@Example.KZ '), 'student@example.kz');
@@ -32,6 +33,7 @@ test('accepts a valid submitted analysis and integrity declaration', () => {
   const result = cleanSubmission({ title: 'Үзінді талдауы', analysis: 'Автордың бейнелі тілі балалық шақтың мейірімді әлемін оқырманға сезіндіреді. '.repeat(2), additionalSources: '', integrityConfirmed: true });
   assert.equal(result.title, 'Үзінді талдауы');
   assert.equal(result.integrityConfirmed, true);
+  assert.equal(cleanSubmission({ title: 'Үзінді талдауы', analysis: 'Автордың бейнелі тілі балалық шақтың мейірімді әлемін оқырманға сезіндіреді. '.repeat(2), integrityConfirmed: 'on' }).integrityConfirmed, true);
 });
 
 test('rejects an analysis without integrity declaration or an unsafe attachment type', () => {
@@ -51,6 +53,32 @@ test('accepts MYP criterion grades and teacher feedback in their allowed ranges'
   const grade = cleanGrade({ scoreA: '7', scoreD: 6, feedback: 'Дәйексөзді әсерімен байланыстыруың сәтті шықты.' });
   assert.deepEqual(grade, { scoreA: 7, scoreD: 6, feedback: 'Дәйексөзді әсерімен байланыстыруың сәтті шықты.', total: 13, status: 'graded' });
   assert.throws(() => cleanGrade({ scoreA: 9, scoreD: 0, feedback: 'Жарамсыз ұпай.' }), /ұпайы/);
+});
+
+test('excluded student results do not affect the class averages or CSV source rows', () => {
+  const first = new ObjectId();
+  const second = new ObjectId();
+  const users = [
+    { _id: first, name: 'Аружан', email: 'a@example.kz' },
+    { _id: second, name: 'Бекзат', email: 'b@example.kz', resultsExcludedAt: new Date() },
+  ];
+  const graded = [
+    { studentId: first, grading: { scoreA: 8, scoreD: 6 } },
+    { studentId: second, grading: { scoreA: 0, scoreD: 2 } },
+  ];
+  const report = buildAdminResults(users, [], graded);
+  assert.equal(report.summary.registeredStudents, 2);
+  assert.equal(report.summary.students, 1);
+  assert.equal(report.summary.excluded, 1);
+  assert.equal(report.summary.averageA, 8);
+  assert.equal(report.summary.averageD, 6);
+  assert.deepEqual(report.students.map(student => student.id), [first.toString()]);
+  assert.deepEqual(report.excludedStudents.map(student => student.id), [second.toString()]);
+
+  const restored = buildAdminResults(users.map(({ resultsExcludedAt, ...user }) => user), [], graded);
+  assert.equal(restored.summary.students, 2);
+  assert.equal(restored.summary.averageA, 4);
+  assert.equal(restored.summary.averageD, 4);
 });
 
 test('student-facing submission responses never expose work text or attachment metadata', () => {
@@ -85,6 +113,7 @@ test('production frontend receives credentialed CORS and cross-site session cook
   assert.equal(headers['Access-Control-Allow-Origin'], 'https://platform-new-ecru.vercel.app');
   assert.equal(headers['Access-Control-Allow-Credentials'], 'true');
   assert.match(headers['Access-Control-Allow-Headers'], /Authorization/);
+  assert.match(headers['Access-Control-Allow-Methods'], /DELETE/);
   setSessionCookie(response, 'token');
   assert.match(headers['Set-Cookie'], /HttpOnly; Secure; SameSite=None/);
 });
