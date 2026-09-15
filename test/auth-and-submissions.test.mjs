@@ -4,7 +4,7 @@ import { ObjectId } from 'mongodb';
 
 process.env.APP_JWT_SECRET = 'test-secret-that-is-long-enough-to-sign-session-tokens';
 
-const { assertAdmin, normalizeEmail, publicUser, setSessionCookie, signSession } = await import('../api/_lib/auth.js');
+const { assertAdmin, normalizeEmail, publicUser, sessionToken, setSessionCookie, signSession } = await import('../api/_lib/auth.js');
 const { allowMethod } = await import('../api/_lib/http.js');
 const { cleanSubmission, gradeView, maxUploadBytes, submissionReceipt, validateUpload } = await import('../api/_lib/submissions.js');
 const { cleanGrade, cleanProgress, isLearningComplete } = await import('../api/_lib/progress.js');
@@ -16,6 +16,11 @@ test('normalizes email before account lookup', () => {
 test('creates a signed session token for a user', async () => {
   const token = await signSession({ _id: new ObjectId(), name: 'Аружан', role: 'student' });
   assert.equal(token.split('.').length, 3);
+});
+
+test('accepts a bearer session when the browser blocks cross-site cookies', () => {
+  assert.equal(sessionToken({ headers: { authorization: 'Bearer signed-token', cookie: 'ushqan_session=stale' } }), 'signed-token');
+  assert.equal(sessionToken({ headers: { cookie: 'ushqan_session=cookie-token' } }), 'cookie-token');
 });
 
 test('does not expose password hashes in public user data', () => {
@@ -79,6 +84,7 @@ test('production frontend receives credentialed CORS and cross-site session cook
   assert.equal(allowMethod({ method: 'GET', headers: { origin: 'https://platform-new-ecru.vercel.app' } }, response, ['GET']), true);
   assert.equal(headers['Access-Control-Allow-Origin'], 'https://platform-new-ecru.vercel.app');
   assert.equal(headers['Access-Control-Allow-Credentials'], 'true');
+  assert.match(headers['Access-Control-Allow-Headers'], /Authorization/);
   setSessionCookie(response, 'token');
   assert.match(headers['Set-Cookie'], /HttpOnly; Secure; SameSite=None/);
 });

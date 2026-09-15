@@ -16,8 +16,9 @@ export default async function handler(req, res) {
       return json(res, 401, { error: 'Email немесе құпиясөз дұрыс емес.' });
     }
 
-    setSessionCookie(res, await signSession(user));
-    return json(res, 200, { user: publicUser(user) });
+    const token = await signSession(user);
+    setSessionCookie(res, token);
+    return json(res, 200, { user: publicUser(user), token });
   } catch (error) {
     return handleError(res, error);
   }

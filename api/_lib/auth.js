@@ -82,8 +82,14 @@ export function clearSessionCookie(res) {
   res.setHeader('Set-Cookie', `${COOKIE}=; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=0`);
 }
 
+export function sessionToken(req) {
+  const authorization = String(req.headers.authorization || '');
+  const bearer = /^Bearer\s+([^\s]+)$/i.exec(authorization);
+  return bearer ? bearer[1] : cookies(req)[COOKIE];
+}
+
 export async function currentUser(req) {
-  const token = cookies(req)[COOKIE];
+  const token = sessionToken(req);
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, secret());

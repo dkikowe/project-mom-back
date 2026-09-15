@@ -25,8 +25,9 @@ export default async function handler(req, res) {
     };
     const result = await users.insertOne(user);
     user._id = result.insertedId;
-    setSessionCookie(res, await signSession(user));
-    return json(res, 201, { user: publicUser(user) });
+    const token = await signSession(user);
+    setSessionCookie(res, token);
+    return json(res, 201, { user: publicUser(user), token });
   } catch (error) {
     if (error?.code === 11000) return json(res, 409, { error: 'Бұл email арқылы тіркелгі бар. Жүйеге кіріңіз.' });
     return handleError(res, error);
